@@ -1,0 +1,101 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+import PostCard from "../../components/PostCard.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const students = await getCollection("students");
+  return students.map((student) => ({
+    params: { slug: student.id },
+    props: { student },
+  }));
+}
+
+const { student } = Astro.props;
+const { name, batch_start, batch_end, linkedin, contact, bio } = student.data;
+const status = batch_end ? `${batch_start}–${batch_end}` : `${batch_start}–present`;
+
+const allProjects = await getCollection("projects");
+const studentProjects = allProjects.filter((p) => p.data.student === student.id);
+
+const allPosts = await getCollection("posts");
+const studentPosts = allPosts
+  .filter((p) => p.data.author === student.id)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<BaseLayout title={name}>
+  <a href="/" class="text-xs font-semibold uppercase tracking-wider text-ink-light hover:text-eth-red transition-colors mb-6 inline-block">
+    ← All Students
+  </a>
+
+  <section class="mb-10">
+    <div class="flex flex-col sm:flex-row sm:items-end gap-4 mb-4">
+      <div>
+        <h2 class="text-5xl font-black tracking-tight">{name}</h2>
+        <div class="w-16 h-1 bg-eth-red mt-2"></div>
+      </div>
+      <span class="text-sm font-mono font-semibold text-ink-light sm:ml-auto">{status}</span>
+    </div>
+
+    {bio && <p class="text-ink-light max-w-2xl mb-4">{bio}</p>}
+
+    <div class="flex gap-4 text-sm">
+      {linkedin && (
+        <a href={linkedin} class="font-semibold text-eth-red hover:underline" target="_blank" rel="noopener">
+          LinkedIn ↗
+        </a>
+      )}
+      {contact && (
+        <a href={`mailto:${contact}`} class="font-semibold text-eth-red hover:underline">
+          {contact}
+        </a>
+      )}
+    </div>
+  </section>
+
+  {studentProjects.length > 0 && (
+    <section class="mb-10">
+      <h3 class="text-2xl font-bold mb-1">Projects</h3>
+      <div class="w-10 h-0.5 bg-eth-red mb-6"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {studentProjects.map((project) => (
+          <ProjectCard
+            title={project.data.title}
+            type={project.data.type}
+            student={project.data.student}
+            studentName={name}
+            abstract={project.data.abstract}
+            lab={project.data.lab}
+            year={project.data.year}
+            supervisors={project.data.supervisors}
+            pdf_url={project.data.pdf_url}
+            code_url={project.data.code_url}
+            slides_url={project.data.slides_url}
+          />
+        ))}
+      </div>
+    </section>
+  )}
+
+  {studentPosts.length > 0 && (
+    <section class="mb-10">
+      <h3 class="text-2xl font-bold mb-1">Posts</h3>
+      <div class="w-10 h-0.5 bg-eth-red mb-6"></div>
+      <div class="space-y-6">
+        {studentPosts.map((post) => (
+          <PostCard
+            slug={post.id}
+            title={post.data.title}
+            date={post.data.date}
+            author={post.data.author}
+            authorName={name}
+            summary={post.data.summary}
+            tags={post.data.tags}
+          />
+        ))}
+      </div>
+    </section>
+  )}
+</BaseLayout>

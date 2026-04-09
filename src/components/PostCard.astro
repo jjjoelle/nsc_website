@@ -1,0 +1,34 @@
+---
+interface Props {
+  slug: string;
+  title: string;
+  date: Date;
+  author: string;
+  authorName?: string;
+  summary?: string;
+  tags?: string[];
+}
+
+const { slug, title, date, author, authorName, summary, tags } = Astro.props;
+const formattedDate = date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+---
+
+<article class="border-l-4 border-eth-red pl-6 py-2">
+  <div class="flex items-baseline gap-3 mb-1">
+    <time class="text-xs font-mono text-ink-light">{formattedDate}</time>
+    <a href={`/students/${author}`} class="text-xs font-semibold text-ink-light hover:text-eth-red transition-colors">
+      {authorName || author}
+    </a>
+  </div>
+  <h3 class="text-lg font-bold leading-snug mb-1">
+    <a href={`/blog/${slug}`} class="hover:text-eth-red transition-colors">{title}</a>
+  </h3>
+  {summary && <p class="text-sm text-ink-light">{summary}</p>}
+  {tags && tags.length > 0 && (
+    <div class="flex gap-2 mt-2">
+      {tags.map((tag) => (
+        <span class="text-xs font-mono text-ink-light">#{tag}</span>
+      ))}
+    </div>
+  )}
+</article>

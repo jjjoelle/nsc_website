@@ -1,0 +1,77 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Virtual hub for Neural Systems and Computation students at INI, ETH Zurich & UZH" } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+const navLinks = [
+  { href: "/", label: "Students" },
+  { href: "/projects", label: "Projects" },
+  { href: "/blog", label: "Blog" },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/gif" href="/ini_man.gif" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+    <title>{title} — The Virtual Masters Room</title>
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <header class="border-b-4 border-border-bold">
+      <div class="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row sm:items-end gap-4">
+        <a href="/" class="group">
+          <span class="text-sm font-medium tracking-widest uppercase text-ink-light">Institute of Neuroinformatics</span>
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight leading-none">
+            The <span class="text-eth-red">Virtual</span> Masters Room
+          </h1>
+        </a>
+        <nav class="sm:ml-auto flex gap-6">
+          {navLinks.map((link) => (
+            <a
+              href={link.href}
+              class:list={[
+                "text-sm font-semibold uppercase tracking-wider hover:text-eth-red transition-colors",
+                currentPath === link.href || (link.href !== "/" && currentPath.startsWith(link.href))
+                  ? "text-eth-red border-b-2 border-eth-red pb-0.5"
+                  : "text-ink",
+              ]}
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-1 max-w-6xl mx-auto px-6 py-10 w-full">
+      <slot />
+    </main>
+
+    <footer class="border-t-2 border-border mt-auto">
+      <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row justify-between gap-4 text-sm text-ink-light">
+        <div>
+          <p class="font-semibold text-ink">Neural Systems & Computation MSc</p>
+          <p>ETH Zurich & University of Zurich</p>
+        </div>
+        <div class="text-right">
+          <a href="https://www.nsc.uzh.ch/en.html" class="hover:text-eth-red transition-colors">nsc.uzh.ch</a>
+          <span class="mx-2">|</span>
+          <a href="https://www.ini.uzh.ch/en" class="hover:text-eth-red transition-colors">ini.uzh.ch</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

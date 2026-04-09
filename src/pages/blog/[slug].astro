@@ -1,0 +1,51 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { title, date, author, tags } = post.data;
+const { Content } = await render(post);
+
+const students = await getCollection("students");
+const authorStudent = students.find((s) => s.id === author);
+const authorName = authorStudent?.data.name || author;
+
+const formattedDate = date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+---
+
+<BaseLayout title={title}>
+  <a href="/blog" class="text-xs font-semibold uppercase tracking-wider text-ink-light hover:text-eth-red transition-colors mb-6 inline-block">
+    ← All Posts
+  </a>
+
+  <article class="max-w-3xl">
+    <header class="mb-8">
+      <h2 class="text-4xl font-black tracking-tight mb-3">{title}</h2>
+      <div class="w-16 h-1 bg-eth-red mb-4"></div>
+      <div class="flex items-center gap-3 text-sm text-ink-light">
+        <time>{formattedDate}</time>
+        <span>·</span>
+        <a href={`/students/${author}`} class="font-semibold hover:text-eth-red transition-colors">{authorName}</a>
+      </div>
+      {tags && tags.length > 0 && (
+        <div class="flex gap-2 mt-3">
+          {tags.map((tag) => (
+            <span class="text-xs font-mono text-ink-light border border-border px-2 py-0.5">#{tag}</span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

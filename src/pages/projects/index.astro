@@ -1,0 +1,134 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+import { getCollection } from "astro:content";
+
+const projects = await getCollection("projects");
+const students = await getCollection("students");
+const studentMap = Object.fromEntries(students.map((s) => [s.id, s.data.name]));
+
+// Get unique values for filters
+const types = [...new Set(projects.map((p) => p.data.type))].sort();
+const labs = [...new Set(projects.map((p) => p.data.lab))].sort();
+const years = [...new Set(projects.map((p) => p.data.year))].sort((a, b) => b - a);
+---
+
+<BaseLayout title="Projects">
+  <section class="mb-8">
+    <h2 class="text-5xl font-black tracking-tight mb-2">Projects</h2>
+    <div class="w-16 h-1 bg-eth-red mb-4"></div>
+    <p class="text-ink-light max-w-2xl">
+      Thesis and short projects completed by NSC students across INI labs.
+    </p>
+  </section>
+
+  <div class="mb-8 flex flex-wrap gap-6">
+    <div>
+      <label class="text-xs font-semibold uppercase tracking-wider text-ink-light block mb-2">Type</label>
+      <div class="flex gap-2" id="type-filters">
+        <button class="type-btn filter-active text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border-bold bg-ink text-white" data-type="all">All</button>
+        {types.map((type) => (
+          <button class="type-btn text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border hover:border-border-bold transition-colors" data-type={type}>
+            {type === "thesis" ? "Thesis" : type === "short" ? "Short" : "Other"}
+          </button>
+        ))}
+      </div>
+    </div>
+    <div>
+      <label class="text-xs font-semibold uppercase tracking-wider text-ink-light block mb-2">Year</label>
+      <div class="flex gap-2" id="year-filters">
+        <button class="year-btn filter-active text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border-bold bg-ink text-white" data-year="all">All</button>
+        {years.map((year) => (
+          <button class="year-btn text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border hover:border-border-bold transition-colors" data-year={year}>
+            {year}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-6">
+    <input
+      type="text"
+      id="search-input"
+      placeholder="Search projects..."
+      class="w-full max-w-md px-4 py-2 border-2 border-border focus:border-border-bold focus:outline-none text-sm"
+    />
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" id="project-grid">
+    {projects
+      .sort((a, b) => b.data.year - a.data.year)
+      .map((project) => (
+        <div
+          data-type={project.data.type}
+          data-year={project.data.year}
+          data-search={`${project.data.title} ${project.data.abstract} ${project.data.lab} ${project.data.supervisors.join(" ")} ${studentMap[project.data.student] || project.data.student}`.toLowerCase()}
+        >
+          <ProjectCard
+            title={project.data.title}
+            type={project.data.type}
+            student={project.data.student}
+            studentName={studentMap[project.data.student]}
+            abstract={project.data.abstract}
+            lab={project.data.lab}
+            year={project.data.year}
+            supervisors={project.data.supervisors}
+            pdf_url={project.data.pdf_url}
+            code_url={project.data.code_url}
+            slides_url={project.data.slides_url}
+          />
+        </div>
+      ))}
+  </div>
+</BaseLayout>
+
+<script>
+  let activeType = "all";
+  let activeYear = "all";
+  let searchQuery = "";
+
+  const cards = document.querySelectorAll<HTMLElement>("#project-grid > div");
+  const typeButtons = document.querySelectorAll<HTMLButtonElement>(".type-btn");
+  const yearButtons = document.querySelectorAll<HTMLButtonElement>(".year-btn");
+  const searchInput = document.querySelector<HTMLInputElement>("#search-input")!;
+
+  function applyFilters() {
+    cards.forEach((card) => {
+      const matchType = activeType === "all" || card.dataset.type === activeType;
+      const matchYear = activeYear === "all" || card.dataset.year === activeYear;
+      const matchSearch = !searchQuery || (card.dataset.search?.includes(searchQuery) ?? true);
+      card.style.display = matchType && matchYear && matchSearch ? "" : "none";
+    });
+  }
+
+  function activateButton(buttons: NodeListOf<HTMLButtonElement>, active: HTMLButtonElement) {
+    buttons.forEach((b) => {
+      b.classList.remove("bg-ink", "text-white", "border-border-bold");
+      b.classList.add("border-border");
+    });
+    active.classList.add("bg-ink", "text-white", "border-border-bold");
+    active.classList.remove("border-border");
+  }
+
+  typeButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeType = btn.dataset.type || "all";
+      activateButton(typeButtons, btn);
+      applyFilters();
+    });
+  });
+
+  yearButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeYear = btn.dataset.year || "all";
+      activateButton(yearButtons, btn);
+      applyFilters();
+    });
+  });
+
+  searchInput.addEventListener("input", () => {
+    searchQuery = searchInput.value.toLowerCase().trim();
+    applyFilters();
+  });
+</script>

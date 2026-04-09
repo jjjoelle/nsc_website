@@ -1,0 +1,39 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostCard from "../../components/PostCard.astro";
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("posts");
+const students = await getCollection("students");
+const studentMap = Object.fromEntries(students.map((s) => [s.id, s.data.name]));
+
+const sortedPosts = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<BaseLayout title="Blog">
+  <section class="mb-8">
+    <h2 class="text-5xl font-black tracking-tight mb-2">Blog</h2>
+    <div class="w-16 h-1 bg-eth-red mb-4"></div>
+    <p class="text-ink-light max-w-2xl">
+      Posts, reflections, and advice from NSC students.
+    </p>
+  </section>
+
+  <div class="space-y-8">
+    {sortedPosts.map((post) => (
+      <PostCard
+        slug={post.id}
+        title={post.data.title}
+        date={post.data.date}
+        author={post.data.author}
+        authorName={studentMap[post.data.author]}
+        summary={post.data.summary}
+        tags={post.data.tags}
+      />
+    ))}
+  </div>
+
+  {sortedPosts.length === 0 && (
+    <p class="text-ink-light text-center py-12">No posts yet. Check back soon!</p>
+  )}
+</BaseLayout>

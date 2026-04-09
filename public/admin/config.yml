@@ -1,0 +1,75 @@
+backend:
+  name: github
+  repo: OWNER/REPO  # Replace with your GitHub repo (e.g., nsc-ini/nsc-hub)
+  branch: main
+
+publish_mode: editorial_workflow
+
+media_folder: public/uploads
+public_folder: /uploads
+
+collections:
+  - name: students
+    label: Students
+    folder: src/content/students
+    create: true
+    slug: "{{fields.name | slugify}}"
+    fields:
+      - { label: Name, name: name, widget: string }
+      - { label: Batch Start, name: batch_start, widget: number, value_type: int }
+      - { label: Batch End, name: batch_end, widget: number, value_type: int, required: false }
+      - { label: LinkedIn URL, name: linkedin, widget: string, required: false }
+      - { label: Contact (email), name: contact, widget: string, required: false }
+      - { label: Bio, name: bio, widget: text, required: false }
+      - { label: Avatar, name: avatar, widget: image, required: false }
+
+  - name: projects
+    label: Projects
+    folder: src/content/projects
+    create: true
+    slug: "{{fields.title | slugify}}"
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Type, name: type, widget: select, options: ["thesis", "short", "other"] }
+      - label: Student
+        name: student
+        widget: relation
+        collection: students
+        search_fields: [name]
+        value_field: "{{slug}}"
+        display_fields: [name]
+      - { label: Abstract, name: abstract, widget: text }
+      - { label: Lab, name: lab, widget: string }
+      - { label: Lab URL, name: lab_url, widget: string, required: false }
+      - label: Supervisors
+        name: supervisors
+        widget: list
+        field: { label: Name, name: name, widget: string }
+      - { label: Year, name: year, widget: number, value_type: int }
+      - { label: PDF URL, name: pdf_url, widget: string, required: false }
+      - { label: Code URL, name: code_url, widget: string, required: false }
+      - { label: Slides URL, name: slides_url, widget: string, required: false }
+
+  - name: posts
+    label: Blog Posts
+    folder: src/content/posts
+    create: true
+    slug: "{{fields.author}}-{{fields.title | slugify}}"
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Date, name: date, widget: datetime }
+      - label: Author
+        name: author
+        widget: relation
+        collection: students
+        search_fields: [name]
+        value_field: "{{slug}}"
+        display_fields: [name]
+      - { label: Summary, name: summary, widget: text, required: false }
+      - { label: Cover Image, name: cover_image, widget: image, required: false }
+      - label: Tags
+        name: tags
+        widget: list
+        required: false
+        field: { label: Tag, name: tag, widget: string }
+      - { label: Body, name: body, widget: markdown }
