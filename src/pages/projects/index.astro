@@ -9,8 +9,7 @@ const studentMap = Object.fromEntries(students.map((s) => [s.id, s.data.name]));
 
 // Get unique values for filters
 const types = [...new Set(projects.map((p) => p.data.type))].sort();
-const labs = [...new Set(projects.map((p) => p.data.lab))].sort();
-const years = [...new Set(projects.map((p) => p.data.year))].sort((a, b) => b - a);
+const tags = [...new Set(projects.flatMap((p) => p.data.tags ?? []))].sort();
 ---
 
 <BaseLayout title="Projects">
@@ -18,11 +17,11 @@ const years = [...new Set(projects.map((p) => p.data.year))].sort((a, b) => b - 
     <h2 class="text-5xl font-black tracking-tight mb-2">Projects</h2>
     <div class="w-16 h-1 bg-eth-red mb-4"></div>
     <p class="text-ink-light max-w-2xl">
-      Thesis and short projects completed by NSC students across INI labs.
+      Thesis and short projects completed by NSC students.
     </p>
   </section>
 
-  <div class="mb-8 flex flex-wrap gap-6">
+  <div class="mb-8 flex flex-wrap gap-6 items-end">
     <div>
       <label class="text-xs font-semibold uppercase tracking-wider text-ink-light block mb-2">Type</label>
       <div class="flex gap-2" id="type-filters">
@@ -35,14 +34,11 @@ const years = [...new Set(projects.map((p) => p.data.year))].sort((a, b) => b - 
       </div>
     </div>
     <div>
-      <label class="text-xs font-semibold uppercase tracking-wider text-ink-light block mb-2">Year</label>
-      <div class="flex gap-2" id="year-filters">
-        <button class="year-btn filter-active text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border-bold bg-ink text-white" data-year="all">All</button>
-        {years.map((year) => (
-          <button class="year-btn text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border hover:border-border-bold transition-colors" data-year={year}>
-            {year}
-          </button>
-        ))}
+      <label class="text-xs font-semibold uppercase tracking-wider text-ink-light block mb-2">Location</label>
+      <div class="flex gap-2" id="ini-toggle">
+        <button class="ini-btn text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border-bold bg-ink text-white" data-ini="all">All</button>
+        <button class="ini-btn text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border hover:border-border-bold transition-colors" data-ini="true">At INI</button>
+        <button class="ini-btn text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border hover:border-border-bold transition-colors" data-ini="false">External</button>
       </div>
     </div>
   </div>
@@ -56,16 +52,34 @@ const years = [...new Set(projects.map((p) => p.data.year))].sort((a, b) => b - 
     />
   </div>
 
+  {tags.length > 0 && (
+    <div class="mb-8">
+      <label class="text-xs font-semibold uppercase tracking-wider text-ink-light block mb-2">Keywords</label>
+      <div class="flex gap-2 flex-wrap" id="tag-filters">
+        {tags.map((tag) => (
+          <button
+            class="tag-btn text-xs font-mono px-3 py-1.5 border-2 border-border hover:border-border-bold transition-colors"
+            data-tag={tag}
+          >
+            #{tag}
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4" id="project-grid">
     {projects
       .sort((a, b) => b.data.year - a.data.year)
       .map((project) => (
         <div
           data-type={project.data.type}
-          data-year={project.data.year}
+          data-ini={project.data.at_ini === true ? "true" : project.data.at_ini === false ? "false" : ""}
+          data-tags={JSON.stringify(project.data.tags ?? [])}
           data-search={`${project.data.title} ${project.data.abstract} ${project.data.lab} ${project.data.supervisors.join(" ")} ${studentMap[project.data.student] || project.data.student}`.toLowerCase()}
         >
           <ProjectCard
+            slug={project.id}
             title={project.data.title}
             type={project.data.type}
             student={project.data.student}
@@ -74,9 +88,7 @@ const years = [...new Set(projects.map((p) => p.data.year))].sort((a, b) => b - 
             lab={project.data.lab}
             year={project.data.year}
             supervisors={project.data.supervisors}
-            pdf_url={project.data.pdf_url}
-            code_url={project.data.code_url}
-            slides_url={project.data.slides_url}
+            tags={project.data.tags}
           />
         </div>
       ))}
@@ -85,20 +97,24 @@ const years = [...new Set(projects.map((p) => p.data.year))].sort((a, b) => b - 
 
 <script>
   let activeType = "all";
-  let activeYear = "all";
+  let activeIni = "all";
   let searchQuery = "";
+  const activeTags = new Set<string>();
 
   const cards = document.querySelectorAll<HTMLElement>("#project-grid > div");
   const typeButtons = document.querySelectorAll<HTMLButtonElement>(".type-btn");
-  const yearButtons = document.querySelectorAll<HTMLButtonElement>(".year-btn");
+  const iniButtons = document.querySelectorAll<HTMLButtonElement>(".ini-btn");
+  const tagButtons = document.querySelectorAll<HTMLButtonElement>(".tag-btn");
   const searchInput = document.querySelector<HTMLInputElement>("#search-input")!;
 
   function applyFilters() {
     cards.forEach((card) => {
       const matchType = activeType === "all" || card.dataset.type === activeType;
-      const matchYear = activeYear === "all" || card.dataset.year === activeYear;
+      const matchIni = activeIni === "all" || card.dataset.ini === activeIni;
+      const cardTags: string[] = JSON.parse(card.dataset.tags || "[]");
+      const matchTag = activeTags.size === 0 || [...activeTags].every((t) => cardTags.includes(t));
       const matchSearch = !searchQuery || (card.dataset.search?.includes(searchQuery) ?? true);
-      card.style.display = matchType && matchYear && matchSearch ? "" : "none";
+      card.style.display = matchType && matchIni && matchTag && matchSearch ? "" : "none";
     });
   }
 
@@ -119,10 +135,15 @@ const years = [...new Set(projects.map((p) => p.data.year))].sort((a, b) => b - 
     });
   });
 
-  yearButtons.forEach((btn) => {
+  iniButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
-      activeYear = btn.dataset.year || "all";
-      activateButton(yearButtons, btn);
+      activeIni = btn.dataset.ini || "all";
+      iniButtons.forEach((b) => {
+        b.classList.remove("bg-ink", "text-white", "border-border-bold");
+        b.classList.add("border-border");
+      });
+      btn.classList.add("bg-ink", "text-white", "border-border-bold");
+      btn.classList.remove("border-border");
       applyFilters();
     });
   });
@@ -130,5 +151,21 @@ const years = [...new Set(projects.map((p) => p.data.year))].sort((a, b) => b - 
   searchInput.addEventListener("input", () => {
     searchQuery = searchInput.value.toLowerCase().trim();
     applyFilters();
+  });
+
+  tagButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tag = btn.dataset.tag!;
+      if (activeTags.has(tag)) {
+        activeTags.delete(tag);
+        btn.classList.remove("bg-ink", "text-white", "border-border-bold");
+        btn.classList.add("border-border");
+      } else {
+        activeTags.add(tag);
+        btn.classList.add("bg-ink", "text-white", "border-border-bold");
+        btn.classList.remove("border-border");
+      }
+      applyFilters();
+    });
   });
 </script>

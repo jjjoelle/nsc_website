@@ -10,7 +10,8 @@ const { title, description = "Virtual hub for Neural Systems and Computation stu
 const currentPath = Astro.url.pathname;
 
 const navLinks = [
-  { href: "/", label: "Students" },
+  { href: "/", label: "Home" },
+  { href: "/students", label: "Students" },
   { href: "/projects", label: "Projects" },
   { href: "/blog", label: "Blog" },
 ];
@@ -73,5 +74,59 @@ const navLinks = [
         </div>
       </div>
     </footer>
+
+    <!-- ini_man random peek from any side, ~25% chance per page load -->
+    <div id="ini-peek" style="position:fixed; z-index:50; pointer-events:none; display:none; transition: transform 0.5s cubic-bezier(0.34,1.4,0.64,1);">
+      <img src="/ini_man.gif" alt="" style="height:150px; width:auto; display:block;" />
+    </div>
   </body>
 </html>
+
+<script>
+  if (Math.random() < 0.25) {
+    const el = document.getElementById("ini-peek")!;
+    const sides = ["bottom", "right", "left", "top"] as const;
+    const side = sides[Math.floor(Math.random() * sides.length)];
+
+    // Reset all edges first, then position on the chosen side
+    el.style.top = "auto";
+    el.style.bottom = "auto";
+    el.style.left = "auto";
+    el.style.right = "auto";
+    el.style.transformOrigin = "center";
+
+    if (side === "bottom") {
+      el.style.bottom = "0px";
+      el.style.right = "24px";
+      el.style.transform = "translateY(160px) rotate(0deg)";
+    } else if (side === "right") {
+      el.style.right = "0px";
+      el.style.top = "35%";
+      el.style.transform = "translateX(160px) rotate(-90deg)";
+    } else if (side === "left") {
+      el.style.left = "0px";
+      el.style.top = "35%";
+      el.style.transform = "translateX(-160px) rotate(90deg)";
+    } else {
+      el.style.top = "0px";
+      el.style.right = "24px";
+      el.style.transform = "translateY(-160px) rotate(180deg)";
+    }
+
+    const inTransform = side === "bottom" ? "translateY(0) rotate(0deg)"
+      : side === "right"  ? "translateX(0) rotate(-90deg)"
+      : side === "left"   ? "translateX(0) rotate(90deg)"
+      : "translateY(0) rotate(180deg)";
+
+    const outTransform = el.style.transform;
+
+    el.style.display = "block";
+    setTimeout(() => {
+      el.style.transform = inTransform;
+      setTimeout(() => {
+        el.style.transform = outTransform;
+        setTimeout(() => { el.style.display = "none"; }, 600);
+      }, 2800);
+    }, 1800);
+  }
+</script>

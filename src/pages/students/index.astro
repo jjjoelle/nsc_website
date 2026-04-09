@@ -1,0 +1,95 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import StudentCard from "../../components/StudentCard.astro";
+import { getCollection } from "astro:content";
+
+const students = await getCollection("students");
+
+// Build unique batch keys like "Fall 2024", sorted newest first
+const batches = [...new Map(
+  students
+    .sort((a, b) => b.data.batch_start - a.data.batch_start)
+    .map((s) => {
+      const key = s.data.batch_semester
+        ? `${s.data.batch_semester} ${s.data.batch_start}`
+        : `${s.data.batch_start}`;
+      return [key, key];
+    })
+).values()];
+---
+
+<BaseLayout title="Students">
+  <section class="mb-8">
+    <h2 class="text-5xl font-black tracking-tight mb-2">Students</h2>
+    <div class="w-16 h-1 bg-eth-red mb-4"></div>
+    <p class="text-ink-light max-w-2xl">
+      Current and alumni students of the Neural Systems & Computation MSc at INI.
+    </p>
+  </section>
+
+  <div class="mb-8 flex gap-3 flex-wrap" id="batch-filters">
+    <button
+      class="filter-btn text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border-bold bg-ink text-white"
+      data-batch="all"
+    >
+      All
+    </button>
+    {batches.map((batch) => (
+      <button
+        class="filter-btn text-xs font-semibold uppercase tracking-wider px-3 py-1.5 border-2 border-border hover:border-border-bold transition-colors"
+        data-batch={batch}
+      >
+        {batch}
+      </button>
+    ))}
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="student-grid">
+    {students
+      .sort((a, b) => b.data.batch_start - a.data.batch_start)
+      .map((student) => {
+        const batchKey = student.data.batch_semester
+          ? `${student.data.batch_semester} ${student.data.batch_start}`
+          : `${student.data.batch_start}`;
+        return (
+          <div data-batch={batchKey}>
+            <StudentCard
+              slug={student.id}
+              name={student.data.name}
+              batch_start={student.data.batch_start}
+              batch_semester={student.data.batch_semester}
+              batch_end={student.data.batch_end}
+              bio={student.data.bio}
+              linkedin={student.data.linkedin}
+            />
+          </div>
+        );
+      })}
+  </div>
+</BaseLayout>
+
+<script>
+  const buttons = document.querySelectorAll<HTMLButtonElement>(".filter-btn");
+  const cards = document.querySelectorAll<HTMLElement>("#student-grid > div");
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const batch = btn.dataset.batch;
+
+      buttons.forEach((b) => {
+        b.classList.remove("bg-ink", "text-white", "border-border-bold");
+        b.classList.add("border-border");
+      });
+      btn.classList.add("bg-ink", "text-white", "border-border-bold");
+      btn.classList.remove("border-border");
+
+      cards.forEach((card) => {
+        if (batch === "all" || card.dataset.batch === batch) {
+          card.style.display = "";
+        } else {
+          card.style.display = "none";
+        }
+      });
+    });
+  });
+</script>

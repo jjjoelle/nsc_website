@@ -6,6 +6,7 @@ const students = defineCollection({
   schema: z.object({
     name: z.string(),
     batch_start: z.number(),
+    batch_semester: z.enum(["Fall", "Spring"]).optional(),
     batch_end: z.number().optional(),
     linkedin: z.string().url().optional(),
     contact: z.string().optional(),
@@ -25,9 +26,11 @@ const projects = defineCollection({
     lab_url: z.string().url().optional(),
     supervisors: z.array(z.string()),
     year: z.number(),
+    at_ini: z.boolean().optional(),
     pdf_url: z.string().url().optional(),
     code_url: z.string().url().optional(),
     slides_url: z.string().url().optional(),
+    tags: z.array(z.string()).optional(),
   }),
 });
 

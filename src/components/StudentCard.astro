@@ -3,13 +3,15 @@ interface Props {
   slug: string;
   name: string;
   batch_start: number;
+  batch_semester?: string;
   batch_end?: number;
   bio?: string;
   linkedin?: string;
 }
 
-const { slug, name, batch_start, batch_end, bio, linkedin } = Astro.props;
-const status = batch_end ? `${batch_start}–${batch_end}` : `${batch_start}–present`;
+const { slug, name, batch_start, batch_semester, batch_end, bio, linkedin } = Astro.props;
+const batchLabel = batch_semester ? `${batch_semester} ${batch_start}` : `${batch_start}`;
+const status = batch_end ? `${batchLabel}–${batch_end}` : `${batchLabel}–present`;
 ---
 
 <a href={`/students/${slug}`} class="block border-2 border-border hover:border-border-bold transition-colors p-6 group">

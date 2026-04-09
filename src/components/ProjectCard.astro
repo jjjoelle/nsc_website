@@ -1,5 +1,6 @@
 ---
 interface Props {
+  slug: string;
   title: string;
   type: string;
   student: string;
@@ -8,34 +9,34 @@ interface Props {
   lab: string;
   year: number;
   supervisors: string[];
-  pdf_url?: string;
-  code_url?: string;
-  slides_url?: string;
+  tags?: string[];
 }
 
-const { title, type, student, studentName, abstract, lab, year, supervisors, pdf_url, code_url, slides_url } = Astro.props;
+const { slug, title, type, student, studentName, abstract, lab, year, supervisors, tags } = Astro.props;
 const typeLabel = type === "thesis" ? "Thesis" : type === "short" ? "Short Project" : "Other";
 const typeColor = type === "thesis" ? "bg-eth-red text-white" : "bg-ink text-white";
 ---
 
-<div class="border-2 border-border p-6">
+<a href={`/projects/${slug}`} class="block border-2 border-border hover:border-border-bold transition-colors p-6 group">
   <div class="flex items-start gap-3 mb-3">
     <span class={`text-xs font-bold uppercase tracking-wider px-2 py-1 ${typeColor}`}>{typeLabel}</span>
     <span class="text-xs font-mono text-ink-light ml-auto">{year}</span>
   </div>
-  <h3 class="text-lg font-bold leading-snug mb-2">{title}</h3>
+  <h3 class="text-lg font-bold leading-snug mb-2 group-hover:text-eth-red transition-colors">{title}</h3>
   <p class="text-sm text-ink-light mb-3 line-clamp-3">{abstract}</p>
   <div class="text-xs text-ink-light space-y-1 mb-4">
-    <p>
-      <span class="font-semibold">Student:</span>{" "}
-      <a href={`/students/${student}`} class="text-eth-red hover:underline">{studentName || student}</a>
-    </p>
+    <p><span class="font-semibold">Student:</span> {studentName || student}</p>
     <p><span class="font-semibold">Lab:</span> {lab}</p>
     <p><span class="font-semibold">Supervisors:</span> {supervisors.join(", ")}</p>
   </div>
-  <div class="flex gap-4 text-xs font-semibold uppercase tracking-wider">
-    {pdf_url && <a href={pdf_url} class="text-eth-red hover:underline">PDF</a>}
-    {code_url && <a href={code_url} class="text-eth-red hover:underline">Code</a>}
-    {slides_url && <a href={slides_url} class="text-eth-red hover:underline">Slides</a>}
-  </div>
-</div>
+  {tags && tags.length > 0 && (
+    <div class="flex flex-wrap gap-1.5 mb-3">
+      {tags.map((tag) => (
+        <span class="text-xs font-mono text-ink-light">#{tag}</span>
+      ))}
+    </div>
+  )}
+  <span class="text-xs font-semibold text-eth-red uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">
+    View →
+  </span>
+</a>

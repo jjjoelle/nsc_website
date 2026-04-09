@@ -26,7 +26,7 @@ const studentPosts = allPosts
 ---
 
 <BaseLayout title={name}>
-  <a href="/" class="text-xs font-semibold uppercase tracking-wider text-ink-light hover:text-eth-red transition-colors mb-6 inline-block">
+  <a href="/students" class="text-xs font-semibold uppercase tracking-wider text-ink-light hover:text-eth-red transition-colors mb-6 inline-block">
     ← All Students
   </a>
 
@@ -62,6 +62,7 @@ const studentPosts = allPosts
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {studentProjects.map((project) => (
           <ProjectCard
+            slug={project.id}
             title={project.data.title}
             type={project.data.type}
             student={project.data.student}
@@ -70,9 +71,6 @@ const studentPosts = allPosts
             lab={project.data.lab}
             year={project.data.year}
             supervisors={project.data.supervisors}
-            pdf_url={project.data.pdf_url}
-            code_url={project.data.code_url}
-            slides_url={project.data.slides_url}
           />
         ))}
       </div>

@@ -1,6 +1,7 @@
 ---
 name: Marco Rossi
 batch_start: 2022
+batch_semester: Fall
 batch_end: 2024
 linkedin: https://linkedin.com/in/marcorossi
 contact: marco.rossi@ini.uzh.ch

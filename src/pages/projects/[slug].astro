@@ -1,0 +1,79 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { title, type, student, abstract, lab, lab_url, supervisors, year, pdf_url, code_url, slides_url, tags } = project.data;
+
+const typeLabel = type === "thesis" ? "Thesis" : type === "short" ? "Short Project" : "Other";
+const typeColor = type === "thesis" ? "bg-eth-red text-white" : "bg-ink text-white";
+
+const students = await getCollection("students");
+const studentEntry = students.find((s) => s.id === student);
+const studentName = studentEntry?.data.name ?? student;
+
+const { Content } = await render(project);
+---
+
+<BaseLayout title={title}>
+  <a href="/projects" class="text-xs font-semibold uppercase tracking-wider text-ink-light hover:text-eth-red transition-colors mb-6 inline-block">
+    ← All Projects
+  </a>
+
+  <section class="mb-10">
+    <div class="flex items-center gap-3 mb-4">
+      <span class={`text-xs font-bold uppercase tracking-wider px-2 py-1 ${typeColor}`}>{typeLabel}</span>
+      <span class="text-xs font-mono text-ink-light">{year}</span>
+    </div>
+    <h2 class="text-4xl sm:text-5xl font-black tracking-tight leading-tight mb-4">{title}</h2>
+    <div class="w-16 h-1 bg-eth-red mb-6"></div>
+
+    <p class="text-ink-light max-w-2xl leading-relaxed mb-8">{abstract}</p>
+
+    <div class="text-sm space-y-2 mb-8">
+      <p>
+        <span class="font-semibold">Student:</span>{" "}
+        <a href={`/students/${student}`} class="text-eth-red hover:underline">{studentName}</a>
+      </p>
+      <p>
+        <span class="font-semibold">Lab:</span>{" "}
+        {lab_url
+          ? <a href={lab_url} class="text-eth-red hover:underline" target="_blank" rel="noopener">{lab} ↗</a>
+          : <span>{lab}</span>
+        }
+      </p>
+      <p>
+        <span class="font-semibold">Supervisors:</span>{" "}
+        {supervisors.join(", ")}
+      </p>
+    </div>
+
+    {tags && tags.length > 0 && (
+      <div class="flex flex-wrap gap-2 mb-6">
+        {tags.map((tag) => (
+          <span class="text-xs font-mono px-2 py-1 border-2 border-border text-ink-light">#{tag}</span>
+        ))}
+      </div>
+    )}
+
+    <div class="flex gap-4 text-sm font-semibold uppercase tracking-wider">
+      {pdf_url && <a href={pdf_url} class="text-eth-red hover:underline" target="_blank" rel="noopener">PDF ↗</a>}
+      {code_url && <a href={code_url} class="text-eth-red hover:underline" target="_blank" rel="noopener">Code ↗</a>}
+      {slides_url && <a href={slides_url} class="text-eth-red hover:underline" target="_blank" rel="noopener">Slides ↗</a>}
+    </div>
+  </section>
+
+  {project.body && (
+    <section class="prose max-w-2xl">
+      <Content />
+    </section>
+  )}
+</BaseLayout>
